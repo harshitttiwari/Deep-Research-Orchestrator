@@ -133,7 +133,7 @@ research_output.txt
 research_history.json
 
 # API Keys and Config (if sensitive)
-# config.py  # Uncomment if you want to exclude config file
+config.py  # Contains sensitive API keys
 
 # Streamlit
 .streamlit/
