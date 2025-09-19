@@ -1,2 +1,1 @@
-google_api_key = "AIzaSyDfp54pCcWq-t8Wat-Y37nQ8ksgDwDNRk0"
-GROQ_API_KEY="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"
+GROQ_API_KEY="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"

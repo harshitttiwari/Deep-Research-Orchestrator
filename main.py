@@ -1,11 +1,11 @@
 from pydantic import BaseModel
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from tools import search_tool, wiki_tool, save_tool
-from config import google_api_key
+from config import GROQ_API_KEY
 import json
+from langchain_groq import ChatGroq
 
 class ResearchResponse(BaseModel):
     topic: str
@@ -13,7 +13,7 @@ class ResearchResponse(BaseModel):
     sources: list[str]
     tools_used: list[str]
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=google_api_key)
+llm = ChatGroq(model="openai/gpt-oss-120b", groq_api_key=GROQ_API_KEY)
 parser = PydanticOutputParser(pydantic_object=ResearchResponse)
 
 prompt = ChatPromptTemplate.from_messages(
@@ -49,7 +49,6 @@ while True:
 
     try:
         output_str = raw_response.get("output")
-        # Remove code block markers if present
         if output_str.startswith("```json"):
             output_str = output_str[len("```json"):]
         if output_str.startswith("```"):

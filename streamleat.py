@@ -1,15 +1,19 @@
 import streamlit as st
 from pydantic import BaseModel
 from langchain_groq import ChatGroq
-# from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from tools import search_tool, wiki_tool, save_tool
-from config import google_api_key, GROQ_API_KEY
+from config import  GROQ_API_KEY
 
-# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=google_api_key)
 llm = ChatGroq(model="openai/gpt-oss-120b", groq_api_key=GROQ_API_KEY)
+
+class ResearchResponse(BaseModel):
+    topic: str
+    summary: str
+    sources: list[str]
+    tools_used: list[str]
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -21,7 +25,7 @@ prompt = ChatPromptTemplate.from_messages(
             Always include a "Sources:" section (with URLs, one per line, starting with "-") and a "Tools used:" section (with tool names, one per line, starting with "-").
             Respond ONLY with the important content, no code blocks, no JSON, no YAML, just clear and concise text.
             '''
-        ),
+        ),  
         ("placeholder", "{chat_history}"),
         ("human", "{query}"),
         ("placeholder", "{agent_scratchpad}"),
@@ -35,7 +39,10 @@ agent = create_tool_calling_agent(
     tools=tools
 )
 
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent_executor = AgentExecutor(agent=agent,
+                                tools=tools,
+                                verbose=True,
+                                max_iterations=10)
 
 st.title("Deep Research Agent")
 
@@ -47,7 +54,7 @@ if "current_input" not in st.session_state:
     st.session_state.current_input = ""
 
 with st.form(key="qa_form", clear_on_submit=True):
-    user_input = st.text_input("What can I help you research?", value=st.session_state.current_input, key="input_box")
+    user_input = st.text_input("What can I help you research? (or type exit)", value=st.session_state.current_input, key="input_box")
     submitted = st.form_submit_button("Submit")
 
 
@@ -80,7 +87,6 @@ if submitted and user_input:
             try:
                 raw_response = agent_executor.invoke({"query": user_input})
                 output_str = raw_response.get("output").strip()
-                # Simple extraction for sources and tools_used
                 sources = []
                 tools_used = []
                 answer_lines = []
